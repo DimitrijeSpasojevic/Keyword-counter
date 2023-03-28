@@ -13,6 +13,7 @@ public class Main {
     private static Integer hop_count;
     private static Integer url_refresh_time;
     public static FileScanner fileScanner;
+    public static WebScanner webScanner;
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     public static BlockingQueue<Job> blockingQueue = new LinkedBlockingDeque<>(10);
 
@@ -21,6 +22,7 @@ public class Main {
         JobDispatcher jobDispatcher = new JobDispatcher();
         jobDispatcher.start();
         fileScanner = new FileScanner();
+        webScanner = new WebScanner();
         Scanner sc = new Scanner(System.in);
         System.out.println("Unesi komandu");
 
@@ -34,7 +36,7 @@ public class Main {
             if(command.equals("ad") && parts.length == 2){
                 addDirectory(parts[1]);
             }else if(command.equals("aw") && parts.length == 2){
-
+                addWeb(parts[1]);
             }else if(command.equals("get") && parts.length == 2){
 
             } else if(command.equals("query") && parts.length == 2){
@@ -50,6 +52,14 @@ public class Main {
         }
         blockingQueue.add(new Job(ScanType.STOP));
         scheduler.shutdown();
+    }
+
+    private static void addWeb(String url) {
+        try {
+            blockingQueue.put(new WebJob(ScanType.WEB,url,hop_count,null));
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static void addDirectory(String relativPathToDir) {

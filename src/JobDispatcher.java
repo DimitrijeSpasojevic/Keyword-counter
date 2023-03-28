@@ -10,8 +10,9 @@ public class JobDispatcher extends Thread{
         while (!job.getType().equals(ScanType.STOP)){
 
             if(job.getType().equals(ScanType.FILE)){
-                System.out.println(((FileJob)job).getDir().getName());
                 Main.fileScanner.scanDir(((FileJob)job).getDir());
+            }else if(job.getType().equals(ScanType.WEB)){
+                Main.webScanner.scanWeb(((WebJob)job));
             }
 
             try {
