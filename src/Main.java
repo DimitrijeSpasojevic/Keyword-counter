@@ -2,11 +2,22 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 import java.util.Scanner;
+import java.util.concurrent.*;
 
 public class Main {
+    private static String keywords[];
+    private static String file_corpus_prefix;
+    private static Integer dir_crawler_sleep_time;
+    private static Integer file_scanning_size_limit;
+    private static Integer hop_count;
+    private static Integer url_refresh_time;
+    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    public static BlockingQueue<Job> blockingQueue = new LinkedBlockingDeque<>(10);
+
     public static void main(String[] args) throws IOException {
         readConfig();
-
+        JobDispatcher jobDispatcher = new JobDispatcher();
+        jobDispatcher.start();
         Scanner sc = new Scanner(System.in);
         System.out.println("Unesi komandu");
 
@@ -34,9 +45,17 @@ public class Main {
             }
             line = sc.nextLine();
         }
+        blockingQueue.add(new Job(ScanType.STOP));
+        scheduler.shutdown();
     }
 
     private static void addDirectory(String relativPathToDir) {
+        DirectoryCrawler directoryCrawler = new DirectoryCrawler(relativPathToDir,keywords,
+                file_corpus_prefix,
+                dir_crawler_sleep_time,
+                file_scanning_size_limit);
+        scheduler.scheduleAtFixedRate(directoryCrawler, 0, dir_crawler_sleep_time, TimeUnit.MILLISECONDS);
+
     }
 
     static void readConfig(){
@@ -52,9 +71,13 @@ public class Main {
             //load a properties file from class path, inside static method
             prop.load(input);
 
-            //get the property value and print it out
-            System.out.println(prop.getProperty("keywords"));
-            System.out.println(prop.getProperty("url_refresh_time"));
+            keywords = prop.getProperty("keywords").split(",");
+            file_corpus_prefix = prop.getProperty("file_corpus_prefix");
+            dir_crawler_sleep_time = Integer.valueOf(prop.getProperty("dir_crawler_sleep_time"));
+            file_scanning_size_limit = Integer.valueOf(prop.getProperty("file_scanning_size_limit"));
+            hop_count = Integer.valueOf(prop.getProperty("hop_count"));
+            url_refresh_time = Integer.valueOf(prop.getProperty("url_refresh_time"));
+
         } catch (IOException ex) {
             ex.printStackTrace();
         }

@@ -1,3 +1,3 @@
 public enum ScanType {
-    FILE, WEB
+    FILE, WEB, STOP
 }
