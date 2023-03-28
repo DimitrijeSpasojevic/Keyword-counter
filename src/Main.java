@@ -1,16 +1,18 @@
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Properties;
 import java.util.Scanner;
 import java.util.concurrent.*;
 
 public class Main {
-    private static String keywords[];
+    public static List<String> keywords;
     private static String file_corpus_prefix;
     private static Integer dir_crawler_sleep_time;
-    private static Integer file_scanning_size_limit;
+    public static Integer file_scanning_size_limit;
     private static Integer hop_count;
     private static Integer url_refresh_time;
+    public static FileScanner fileScanner;
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     public static BlockingQueue<Job> blockingQueue = new LinkedBlockingDeque<>(10);
 
@@ -18,6 +20,7 @@ public class Main {
         readConfig();
         JobDispatcher jobDispatcher = new JobDispatcher();
         jobDispatcher.start();
+        fileScanner = new FileScanner();
         Scanner sc = new Scanner(System.in);
         System.out.println("Unesi komandu");
 
@@ -71,7 +74,7 @@ public class Main {
             //load a properties file from class path, inside static method
             prop.load(input);
 
-            keywords = prop.getProperty("keywords").split(",");
+            keywords = List.of(prop.getProperty("keywords").split(","));
             file_corpus_prefix = prop.getProperty("file_corpus_prefix");
             dir_crawler_sleep_time = Integer.valueOf(prop.getProperty("dir_crawler_sleep_time"));
             file_scanning_size_limit = Integer.valueOf(prop.getProperty("file_scanning_size_limit"));

@@ -3,21 +3,20 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.Locale;
+import java.util.List;
 import java.util.Map;
 
 public class DirectoryCrawler extends Thread{
 
     private String pathToDir;
-    private String[] keywords;
+    private List<String> keywords;
     private String fileCorpusPrefix;
     private Integer dirCrawlerSleepTime;
     private Integer fileScanningSizeLimit;
     private Map<String, Long> mapLastModified;
 
-    public DirectoryCrawler(String pathToDir, String[] keywords, String fileCorpusPrefix, Integer dirCrawlerSleepTime, Integer fileScanningSizeLimit) {
+    public DirectoryCrawler(String pathToDir, List<String> keywords, String fileCorpusPrefix, Integer dirCrawlerSleepTime, Integer fileScanningSizeLimit) {
         this.pathToDir = pathToDir;
         this.keywords = keywords;
         this.fileCorpusPrefix = fileCorpusPrefix;

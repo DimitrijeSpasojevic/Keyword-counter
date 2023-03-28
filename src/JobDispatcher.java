@@ -11,6 +11,7 @@ public class JobDispatcher extends Thread{
 
             if(job.getType().equals(ScanType.FILE)){
                 System.out.println(((FileJob)job).getDir().getName());
+                Main.fileScanner.scanDir(((FileJob)job).getDir());
             }
 
             try {

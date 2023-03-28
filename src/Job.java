@@ -1,7 +1,7 @@
 import java.util.Map;
 import java.util.concurrent.Future;
 
-public class Job implements ScanningJob{
+public class Job implements ScanningJob {
 
     private ScanType type;
     private String query;
