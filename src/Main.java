@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Scanner;
 import java.util.concurrent.*;
@@ -14,6 +15,7 @@ public class Main {
     static Integer url_refresh_time;
     public static FileScanner fileScanner;
     public static WebScanner webScanner;
+    public static ResultRetriever resultRetriever;
     public static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
     public static BlockingQueue<Job> blockingQueue = new LinkedBlockingDeque<>(10);
 
@@ -23,6 +25,7 @@ public class Main {
         jobDispatcher.start();
         fileScanner = new FileScanner();
         webScanner = new WebScanner();
+        resultRetriever = new ResultRetrieverImpl();
         Scanner sc = new Scanner(System.in);
         System.out.println("Unesi komandu");
 
@@ -38,9 +41,25 @@ public class Main {
             }else if(command.equals("aw") && parts.length == 2){
                 addWeb(parts[1]);
             }else if(command.equals("get") && parts.length == 2){
+                String actions[] = parts[1].split("\\|");
+                if(actions[0].equals("file") && actions[1].equals("summary")){
+                    resultRetriever.getSummary(ScanType.FILE);
+                } else if (actions[0].equals("file")) {
+                    Map<String, Integer> map = resultRetriever.getResult(actions[1]);
+                    System.out.println(map);
+                } else if (actions[0].equals("web")){
 
+                }
             } else if(command.equals("query") && parts.length == 2){
+                String actions[] = parts[1].split("\\|");
+                if(actions[0].equals("file") && actions[1].equals("summary")){
+                    resultRetriever.querySummary(ScanType.FILE);
+                } else if (actions[0].equals("file")) {
+                    Map<? extends Object, ? extends Object> map = resultRetriever.queryResult(actions[1]);
+                    System.out.println(map);
+                } else if (actions[0].equals("web")){
 
+                }
             }else if(command.equals("cws")){
 
             }else if(command.equals("cfs")){
@@ -63,6 +82,7 @@ public class Main {
     }
 
     private static void addDirectory(String relativPathToDir) {
+        System.out.println("Adding dir " + relativPathToDir);
         DirectoryCrawler directoryCrawler = new DirectoryCrawler(relativPathToDir,keywords,
                 file_corpus_prefix,
                 dir_crawler_sleep_time,

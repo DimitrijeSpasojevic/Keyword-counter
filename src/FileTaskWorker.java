@@ -9,8 +9,16 @@ public class FileTaskWorker extends RecursiveTask {
     private int end; //kraj opsega
     private File[] files;
     private static final int MAX = Main.file_scanning_size_limit; //max posla koliko smemo da imamo
-    private Map<String, Integer> map;
+    private  Map<String, Map<String, Integer>> map;
+    private File dir;
 
+    public FileTaskWorker(File[] files, int start, int end, Map<String, Map<String, Integer>> map, File dir) {
+        this.start = start;
+        this.end = end;
+        this.files = files;
+        this.dir = dir;
+        this.map = map;
+    }
 
     private void readFromFiles(Map<String,Integer> map) throws IOException {
 
@@ -39,7 +47,7 @@ public class FileTaskWorker extends RecursiveTask {
         }
     }
 
-    private void countKeyWords(byte[] bytes, int offset){
+    private void countKeyWords(byte[] bytes, int offset, Map<String,Integer> map){
         Runnable runnable = () -> {
             byte[] bytesForScan = new byte[Main.file_scanning_size_limit];
             for (int i = 0; i < Main.file_scanning_size_limit; i++) {
@@ -60,15 +68,6 @@ public class FileTaskWorker extends RecursiveTask {
         runnable.run();
     }
 
-    public FileTaskWorker(File[] files, int start, int end, Map<String, Integer> map) {
-        this.start = start;
-        this.end = end;
-        this.files = files;
-        //ispis da pratimo koliko se dodatnih niti napravilo, u rekurziji deljenja posla
-//        System.out.println("New Job " + start + " " + end);
-        this.map = map;
-    }
-
     @Override
     protected Object compute() {
 
@@ -84,35 +83,29 @@ public class FileTaskWorker extends RecursiveTask {
             }
             if(can){
                 try {
-                    readFromFiles(map);
+                    readFromFiles(map.get(dir.getName()));
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             } else {
-                //ako nije, trazimo polovinu opsega
                 int mid = ((end - start) / 2) + start;
 
-                //delimo posao da sva dela, levi i desni, levi ide od starta do pola(mid), a desni od mid do end-a, tj kraja opsega
-                FileTaskWorker left = new FileTaskWorker(files, start, mid, map);
-                FileTaskWorker right = new FileTaskWorker(files, mid, end, map);
+                FileTaskWorker left = new FileTaskWorker(files, start, mid, map, dir);
+                FileTaskWorker right = new FileTaskWorker(files, mid, end, map, dir);
 
-                //ovim pravimo novu nit koja ce da se bavi levim poslom
                 left.fork();
 
-                //ova nit koja je i podelila posao racuna svoj, desni deo posla
-                Map<String, Integer> rightResult = (Map<String, Integer>) right.compute();
-                //dohvatamo sta je rezultat leve, nove, niti
-                Map<String, Integer> leftResult = (Map<String, Integer>) left.join();
+                Map<String, Map<String, Integer>> rightResult = ( Map<String, Map<String, Integer>>) right.compute();
+                Map<String, Map<String, Integer>>leftResult = ( Map<String, Map<String, Integer>>) left.join();
             }
         }else { // delimo jedan fajl na manje delove
-//            System.out.println(files[start] + " - fajl se radi");
             try {
                 byte[] bytes = readFile(files[start]);
                 int brojNitiZaFajl = bytes.length / Main.file_scanning_size_limit;
                 if(bytes.length % Main.file_scanning_size_limit != 0) brojNitiZaFajl++;
 
                 for (int i = 0; i < brojNitiZaFajl; i++) {
-                    countKeyWords(bytes, i);
+                    countKeyWords(bytes, i, map.get(dir.getName()));
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);
