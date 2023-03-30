@@ -1,3 +1,6 @@
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 
@@ -5,8 +8,17 @@ public class WebScanner {
     //pravimo pool, koji ce da nam daje niti
     ExecutorService pool = Executors.newCachedThreadPool();
     private Map<String, Integer> map;
+    static List<String> urls;
     //completion service koji ce da nam daje rezultate niti
     ExecutorCompletionService<Map<String,Integer>> results = new ExecutorCompletionService<>(pool);
+
+    public WebScanner() {
+        urls = Collections.synchronizedList(new ArrayList<>());
+        Main.scheduler.scheduleAtFixedRate(() -> {
+//            System.out.println("urls " + urls);
+            urls.clear();
+            }, Main.url_refresh_time, Main.url_refresh_time, TimeUnit.MILLISECONDS);
+    }
 
     public void scanWeb(WebJob job){
         map = new ConcurrentHashMap<>();

@@ -11,10 +11,10 @@ public class Main {
     private static Integer dir_crawler_sleep_time;
     public static Integer file_scanning_size_limit;
     private static Integer hop_count;
-    private static Integer url_refresh_time;
+    static Integer url_refresh_time;
     public static FileScanner fileScanner;
     public static WebScanner webScanner;
-    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    public static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
     public static BlockingQueue<Job> blockingQueue = new LinkedBlockingDeque<>(10);
 
     public static void main(String[] args) throws IOException {

@@ -24,10 +24,12 @@ public class WebTaskWorker implements Callable {
         Document doc = Jsoup.connect(url).get();
         Elements links = doc.select("a[href]");
         for (Element link : links) {
-            if (job.getHopCount() > 0) {
-//                System.out.println(link.attr("abs:href") + " ++++++++=++++");
-                Main.blockingQueue.put(new WebJob(ScanType.WEB, link.attr("abs:href"), job.getHopCount() - 1, job));
-                job.setHopCount(job.getHopCount() - 1);
+            if(!WebScanner.urls.contains(link.attr("abs:href"))){
+                if (job.getHopCount() > 0) {
+                    Main.blockingQueue.put(new WebJob(ScanType.WEB, link.attr("abs:href"), job.getHopCount() - 1, job));
+                    job.setHopCount(job.getHopCount() - 1);
+                }
+                WebScanner.urls.add(link.attr("abs:href"));
             }
         }
 
