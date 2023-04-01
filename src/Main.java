@@ -1,3 +1,13 @@
+import jobs.Job;
+import jobs.ScanType;
+import jobs.WebJob;
+import scanners.FileScanner;
+import scanners.WebScanner;
+import utils.DirectoryCrawler;
+import utils.JobDispatcher;
+import utils.ResultRetriever;
+import utils.ResultRetrieverImpl;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -8,11 +18,11 @@ import java.util.concurrent.*;
 
 public class Main {
     public static List<String> keywords;
-    private static String file_corpus_prefix;
-    private static Integer dir_crawler_sleep_time;
+    public static String file_corpus_prefix;
+    public static Integer dir_crawler_sleep_time;
     public static Integer file_scanning_size_limit;
-    private static Integer hop_count;
-    static Integer url_refresh_time;
+    public static Integer hop_count;
+    public static Integer url_refresh_time;
     public static FileScanner fileScanner;
     public static WebScanner webScanner;
     public static ResultRetriever resultRetriever;
@@ -21,11 +31,11 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         readConfig();
-        JobDispatcher jobDispatcher = new JobDispatcher();
-        jobDispatcher.start();
-        fileScanner = new FileScanner();
-        webScanner = new WebScanner();
         resultRetriever = new ResultRetrieverImpl();
+        fileScanner = new FileScanner(resultRetriever,file_scanning_size_limit, keywords);
+        webScanner = new WebScanner(resultRetriever,keywords,url_refresh_time, scheduler,blockingQueue);
+        JobDispatcher jobDispatcher = new JobDispatcher(fileScanner, webScanner, blockingQueue);
+        jobDispatcher.start();
         Scanner sc = new Scanner(System.in);
         System.out.println("Unesi komandu");
 
@@ -45,7 +55,7 @@ public class Main {
                 if(actions[0].equals("file") && actions[1].equals("summary")){
                     resultRetriever.getSummary(ScanType.FILE);
                 } else if (actions[0].equals("file")) {
-                    Map<String, Integer> map = resultRetriever.getResult(actions[1]);
+                    Map<String, Integer> map = resultRetriever.getResult(parts[1]);
                     System.out.println(map);
                 } else if (actions[0].equals("web")){
 
@@ -55,7 +65,7 @@ public class Main {
                 if(actions[0].equals("file") && actions[1].equals("summary")){
                     resultRetriever.querySummary(ScanType.FILE);
                 } else if (actions[0].equals("file")) {
-                    Map<? extends Object, ? extends Object> map = resultRetriever.queryResult(actions[1]);
+                    Map<? extends Object, ? extends Object> map = resultRetriever.queryResult(parts[1]);
                     System.out.println(map);
                 } else if (actions[0].equals("web")){
 
@@ -83,7 +93,7 @@ public class Main {
 
     private static void addDirectory(String relativPathToDir) {
         System.out.println("Adding dir " + relativPathToDir);
-        DirectoryCrawler directoryCrawler = new DirectoryCrawler(relativPathToDir,keywords,
+        DirectoryCrawler directoryCrawler = new DirectoryCrawler(blockingQueue,relativPathToDir,keywords,
                 file_corpus_prefix,
                 dir_crawler_sleep_time,
                 file_scanning_size_limit);
@@ -100,7 +110,6 @@ public class Main {
                 System.out.println("Sorry, unable to find app.properties");
                 return;
             }
-
             //load a properties file from class path, inside static method
             prop.load(input);
 

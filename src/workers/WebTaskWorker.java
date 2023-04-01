@@ -1,21 +1,32 @@
+package workers;
+
+import jobs.Job;
+import jobs.ScanType;
+import jobs.WebJob;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import scanners.WebScanner;
 
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class WebTaskWorker implements Callable {
 
     private String url;
     private WebJob job;
     private Map<String, Integer> map;
-    public WebTaskWorker(WebJob job, Map<String, Integer> map) {
+    private BlockingQueue<Job> blockingQueue;
+    public List<String> keywords;
+    public WebTaskWorker(WebJob job, Map<String, Integer> map, BlockingQueue<Job> blockingQueue, List<String> keywords) {
         this.url = job.getUrl();
         this.job = job;
         this.map = map;
+        this.blockingQueue = blockingQueue;
+        this.keywords = keywords;
     }
 
     @Override
@@ -26,7 +37,7 @@ public class WebTaskWorker implements Callable {
         for (Element link : links) {
             if(!WebScanner.urls.contains(link.attr("abs:href"))){
                 if (job.getHopCount() > 0) {
-                    Main.blockingQueue.put(new WebJob(ScanType.WEB, link.attr("abs:href"), job.getHopCount() - 1, job));
+                    blockingQueue.put(new WebJob(ScanType.WEB, link.attr("abs:href"), job.getHopCount() - 1, job));
                     job.setHopCount(job.getHopCount() - 1);
                 }
                 WebScanner.urls.add(link.attr("abs:href"));
@@ -35,7 +46,7 @@ public class WebTaskWorker implements Callable {
 
         String words[] = doc.body().text().split(" ");
         for (String word: words){
-            if(Main.keywords.contains(word)){
+            if(keywords.contains(word)){
                 if(map.containsKey(word)){
                     map.put(word,map.get(word) + 1);
                 }else {

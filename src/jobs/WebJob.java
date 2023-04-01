@@ -1,4 +1,6 @@
-public class WebJob extends Job{
+package jobs;
+
+public class WebJob extends Job {
 
     private String url;
     private Integer hopCount;
