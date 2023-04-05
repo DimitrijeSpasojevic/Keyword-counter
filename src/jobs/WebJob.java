@@ -4,13 +4,14 @@ public class WebJob extends Job {
 
     private String url;
     private Integer hopCount;
-    private WebJob parentJob;
 
-    public WebJob(ScanType type, String url, Integer hopCount, WebJob parentJob) {
+    private String parentDomain;
+
+    public WebJob(ScanType type, String url, Integer hopCount, String parentDomain) {
         super(type);
         this.url = url;
         this.hopCount = hopCount;
-        this.parentJob = parentJob;
+        this.parentDomain = parentDomain;
     }
 
     public String getUrl() {
@@ -23,5 +24,13 @@ public class WebJob extends Job {
 
     public void setHopCount(Integer hopCount) {
         this.hopCount = hopCount;
+    }
+
+    public String getParentDomain() {
+        return parentDomain;
+    }
+
+    public void setParentDomain(String parentDomain) {
+        this.parentDomain = parentDomain;
     }
 }

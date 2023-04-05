@@ -15,9 +15,10 @@ public class WebScanner {
     //pravimo pool, koji ce da nam daje niti
     ExecutorService pool = Executors.newCachedThreadPool();
     private Map<String, Integer> map;
+    private Map<String, Map<String, Integer>> mapFinalResult;
     public static List<String> urls;
-    //completion service koji ce da nam daje rezultate niti
-    ExecutorCompletionService<Map<String,Integer>> results = new ExecutorCompletionService<>(pool);
+
+    ExecutorCompletionService<Map<String, Map<String, Integer>>> results = new ExecutorCompletionService<>(pool);
     private ResultRetriever resultRetriever;
     private List<String> keywords;
     private Integer url_refresh_time;
@@ -27,6 +28,7 @@ public class WebScanner {
     public WebScanner(ResultRetriever resultRetriever, List<String> keywords, Integer url_refresh_time, ScheduledExecutorService scheduler, BlockingQueue<Job> blockingQueue) {
         this.resultRetriever = resultRetriever;
         this.keywords = keywords;
+        this.mapFinalResult = new ConcurrentHashMap<>();
         this.scheduler = scheduler;
         this.blockingQueue = blockingQueue;
         this.url_refresh_time = url_refresh_time;
@@ -38,18 +40,19 @@ public class WebScanner {
     }
 
     public void scanWeb(WebJob job){
-        map = new ConcurrentHashMap<>();
-        results.submit(new WebTaskWorker(job,map, blockingQueue,keywords));
+
+        if(!mapFinalResult.containsKey(job.getParentDomain())){
+            map = new ConcurrentHashMap<>();
+            mapFinalResult.put(job.getParentDomain(),map);
+        }
+
+        results.submit(new WebTaskWorker(job,mapFinalResult, blockingQueue,keywords));
 
         try {
-            //uzimanje rezultata iz queue-a od copletion service-a
-            Future<Map<String,Integer>> result = results.take();
+            Future<Map<String, Map<String, Integer>>> result = results.take();
 
-            for(int i = 0; i< keywords.size(); i++){ //ispis svih rezultata
-                System.out.println(keywords.get(i));
-                System.out.println(result.get().get(keywords.get(i)));
-            }
-        } catch (InterruptedException | ExecutionException e) {
+            resultRetriever.addCorpusResult("web|" + job.getParentDomain(),result);
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }

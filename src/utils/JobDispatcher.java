@@ -36,17 +36,15 @@ public class JobDispatcher extends Thread{
                 fileScanner.scanDir(((FileJob)job).getDir());
             }else if(job.getType().equals(ScanType.WEB)){
                 webScanner.scanWeb(((WebJob)job));
-            } else if (job.getType().equals(ScanType.STOP)) {
-                webScanner.stopPool();
-                fileScanner.stopPool();
             }
-
             try {
                 job = blockingQueue.take();
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
         }
-        System.out.println("Zavrsio job dispatcher");
+        webScanner.stopPool();
+        fileScanner.stopPool();
+        System.out.println("Ugasio se job dispatcher");
     }
 }

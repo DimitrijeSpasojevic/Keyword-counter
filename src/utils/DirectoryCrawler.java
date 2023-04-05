@@ -45,7 +45,7 @@ public class DirectoryCrawler extends Thread{
                 }
             });
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            System.out.println("Nepostojeći direktorijum");
         }
     }
     private void showFile(File file) throws InterruptedException {

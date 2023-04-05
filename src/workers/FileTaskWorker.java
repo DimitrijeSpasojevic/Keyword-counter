@@ -28,29 +28,33 @@ public class FileTaskWorker extends RecursiveTask {
         this.keywords = keywords;
     }
 
-    private void readFromFiles(Map<String,Integer> map) throws IOException {
-        for (int i = start; i < end; i++) {
-            String line;
-            //Opens a file in read mode
-            FileReader fileReader = new FileReader(files[i]);
-            BufferedReader br = new BufferedReader(fileReader);
+    private void readFromFiles(Map<String,Integer> map) {
+        try {
+            for (int i = start; i < end; i++) {
+                String line;
+                //Opens a file in read mode
+                FileReader fileReader = new FileReader(files[i]);
+                BufferedReader br = new BufferedReader(fileReader);
 
-            //Gets each line till end of file is reached
-            while((line = br.readLine()) != null) {
-                //Splits each line into words
-                String words[] = line.split(" ");
-                //Counts each word
-                for (String word: words){
-                    if(keywords.contains(word)){
-                        if(map.containsKey(word)){
-                            map.put(word,map.get(word) + 1);
-                        }else {
-                            map.put(word,1);
+                //Gets each line till end of file is reached
+                while((line = br.readLine()) != null) {
+                    //Splits each line into words
+                    String words[] = line.split(" ");
+                    //Counts each word
+                    for (String word: words){
+                        if(keywords.contains(word)){
+                            if(map.containsKey(word)){
+                                map.put(word,map.get(word) + 1);
+                            }else {
+                                map.put(word,1);
+                            }
                         }
                     }
                 }
+                br.close();
             }
-            br.close();
+        }catch (Exception e){
+            map.put("Problem sa datotekom", -1);
         }
     }
 
@@ -89,11 +93,7 @@ public class FileTaskWorker extends RecursiveTask {
                 }
             }
             if(can){
-                try {
-                    readFromFiles(map.get(dir.getName()));
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+                readFromFiles(map.get(dir.getName()));
             } else {
                 int mid = ((end - start) / 2) + start;
 

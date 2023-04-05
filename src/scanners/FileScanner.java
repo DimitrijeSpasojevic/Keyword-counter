@@ -26,21 +26,14 @@ public class FileScanner {
         this.resultRetriever = resultRetriever;
         this.file_scanning_size_limit = file_scanning_size_limit;
         this.keywords = keywords;
+        this.map = new ConcurrentHashMap<>();
     }
 
     public void scanDir(File dir){
-        map = new ConcurrentHashMap<>();
         map.put(dir.getName(), new ConcurrentHashMap<>());
         File[] directoryListing = dir.listFiles();
         System.out.println("Starting file scan for file|" + dir.getName());
         Future<Map<String, Map<String, Integer>>> corpusResult = pool.submit(new FileTaskWorker(directoryListing,0,directoryListing.length, map, dir, file_scanning_size_limit, keywords));
-        try {
-            corpusResult.get();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        } catch (ExecutionException e) {
-            throw new RuntimeException(e);
-        }
 
         resultRetriever.addCorpusResult("file|" + dir.getName(), corpusResult);
     }
